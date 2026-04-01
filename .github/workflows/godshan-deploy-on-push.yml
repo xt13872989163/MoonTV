@@ -19,39 +19,29 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # ==============================================
-            # 安全逻辑：
-            # 1. 目录不存在 → 克隆
-            # 2. 目录存在但不是git → 不删除！进入并强制初始化git
-            # 3. 是git → 直接安全更新
-            # 绝对不删除任何文件！
-            # ==============================================
-
             TARGET="/opt/moontv"
-
-            # 目录不存在 → 克隆
-            if [ ! -d "$TARGET" ]; then
-              mkdir -p "$TARGET"
-              git clone https://github.com/xt13872989163/MoonTV.git "$TARGET"
-            fi
 
             # 进入目录
             cd "$TARGET"
 
-            # 如果不是git仓库 → 安全绑定远程仓库（不删除文件）
-            if [ ! -d ".git" ]; then
-              git init
-              git remote add origin https://github.com/xt13872989163/MoonTV.git
-              git fetch origin
-              git checkout custom -f
-            fi
+            # ==============================================
+            # 清空目录所有内容（保留目录本身，你要的逻辑）
+            # ==============================================
+            shopt -s dotglob
+            rm -rf *
+            shopt -u dotglob
 
-            # 安全拉取代码（自动处理冲突，不报错）
-            git config pull.ff only
+            # ==============================================
+            # 重新初始化 Git，拉取最新代码
+            # ==============================================
+            git init
+            git remote add origin https://github.com/xt13872989163/MoonTV.git
             git fetch origin
-            git pull origin custom --force
+            git checkout custom -f
 
-            # 重启Docker
+            # ==============================================
+            # 重启 Docker
+            # ==============================================
             docker compose down
             docker compose up -d --build
             docker image prune -f
