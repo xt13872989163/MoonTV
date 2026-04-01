@@ -15,7 +15,7 @@ services:
       - SITE_NAME=MoonTV
       - NEXT_PUBLIC_ENABLE_REGISTER=false # 关闭公开注册，仅管理员可用
       - REDIS_URL=redis://moontv-redis:6379 # 连接 Redis
-      - NEXT_PUBLIC_IMAGE_PROXY=https://images.weserv.nl/?url= # 图片代理，解决418
+      - NEXT_PUBLIC_DEFAULT_IMAGE_PROVIDER=tmdb   # 强制使用 TMDB 图片
     networks:
       - moontv-network
     depends_on:
