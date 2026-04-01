@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  moontv:
+    # 本地构建（使用项目目录下的 Dockerfile）
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: moontv
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      - USERNAME=admin
+      - PASSWORD=godShan
+      - SITE_NAME=MoonTV
+      - NEXT_PUBLIC_ENABLE_REGISTER=false # 关闭公开注册，仅管理员可用
+      - REDIS_URL=redis://moontv-redis:6379 # 连接 Redis
+    networks:
+      - moontv-network
+    depends_on:
+      - moontv-redis # 确保 Redis 先启动
+
+  # Redis 持久化服务：保存播放记录、收藏夹等数据
+  moontv-redis:
+    image: redis:alpine
+    container_name: moontv-redis
+    restart: unless-stopped
+    networks:
+      - moontv-network
+    volumes:
+      - ./redis-data:/data # 数据挂载到本地，容器重启数据不丢
+
+networks:
+  moontv-network:
+    driver: bridge
