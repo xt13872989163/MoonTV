@@ -1,55 +1,57 @@
 name: Deploy to Docker on Push
 on:
-  # 仅当推送到 main 分支时触发部署（如果你的默认分支是 master，请修改为 master）
   push:
     branches:
       - custom
-  # 保留手动触发功能，方便随时重新部署
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # 1. 检出最新代码
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. SSH 到服务器执行部署
       - name: Deploy to Ubuntu server via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          # 【必须替换】服务器上的项目路径和部署命令
           script: |
             # ==============================================
-            # 最安全逻辑：
-            # 1. 没有目录 → 克隆
-            # 2. 有目录但不是git → 删掉重建
-            # 3. 是git → 直接更新
+            # 安全逻辑：
+            # 1. 目录不存在 → 克隆
+            # 2. 目录存在但不是git → 不删除！进入并强制初始化git
+            # 3. 是git → 直接安全更新
+            # 绝对不删除任何文件！
             # ==============================================
 
-            # 目标目录
             TARGET="/opt/moontv"
 
-            # 如果目录不存在 → 直接克隆
+            # 目录不存在 → 克隆
             if [ ! -d "$TARGET" ]; then
+              mkdir -p "$TARGET"
               git clone https://github.com/xt13872989163/MoonTV.git "$TARGET"
-            else
-              # 如果目录存在，但不是git仓库 → 删除重建
-              if [ ! -d "$TARGET/.git" ]; then
-                rm -rf "$TARGET"
-                git clone https://github.com/xt13872989163/MoonTV.git "$TARGET"
-              fi
             fi
 
-            # 进入目录并更新
+            # 进入目录
             cd "$TARGET"
-            git pull origin custom
 
-            # 重启服务
+            # 如果不是git仓库 → 安全绑定远程仓库（不删除文件）
+            if [ ! -d ".git" ]; then
+              git init
+              git remote add origin https://github.com/xt13872989163/MoonTV.git
+              git fetch origin
+              git checkout custom -f
+            fi
+
+            # 安全拉取代码（自动处理冲突，不报错）
+            git config pull.ff only
+            git fetch origin
+            git pull origin custom --force
+
+            # 重启Docker
             docker compose down
             docker compose up -d --build
             docker image prune -f
