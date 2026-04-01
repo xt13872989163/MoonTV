@@ -1,0 +1,36 @@
+name: Deploy to Docker on Push
+on:
+  # 仅当推送到 main 分支时触发部署（如果你的默认分支是 master，请修改为 master）
+  push:
+    branches:
+      - custom
+  # 保留手动触发功能，方便随时重新部署
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. 检出最新代码
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. SSH 到服务器执行部署
+      - name: Deploy to Ubuntu server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          # 【必须替换】服务器上的项目路径和部署命令
+          script: |
+            # 进入项目目录（替换为你的实际路径）
+            cd /opt/moontv
+            # 拉取 GitHub 上的最新代码
+            git pull origin custom
+            # 停止旧容器
+            docker compose down
+            # 重新构建并启动新容器
+            docker compose up -d --build
+            # 清理旧镜像（可选，释放空间）
+            docker image prune -f
