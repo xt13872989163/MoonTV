@@ -30,7 +30,7 @@ services:
     networks:
       - moontv-network
     volumes:
-      - ./redis-data:/data # 数据挂载到本地，容器重启数据不丢
+      - ./redis-data:/data # 数据挂载到本地,容器重启数据不丢
 
 networks:
   moontv-network:
