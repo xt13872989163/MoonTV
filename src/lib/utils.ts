@@ -28,11 +28,49 @@ export function getImageProxyUrl(): string | null {
     : null;
 }
 
+function getImageProxyUrlIgnoreToggle(): string | null {
+  if (typeof window === 'undefined') return null;
+
+  const localImageProxy = localStorage.getItem('imageProxyUrl');
+  if (localImageProxy != null) {
+    return localImageProxy.trim() ? localImageProxy.trim() : null;
+  }
+
+  const serverImageProxy = (window as any).RUNTIME_CONFIG?.IMAGE_PROXY;
+  return serverImageProxy && serverImageProxy.trim()
+    ? serverImageProxy.trim()
+    : null;
+}
+
+export function isDoubanImageUrl(url: string): boolean {
+  if (!url) return false;
+
+  try {
+    const normalizedUrl = url.startsWith('//') ? `https:${url}` : url;
+    const hostname = new URL(normalizedUrl).hostname.toLowerCase();
+
+    return (
+      hostname === 'douban.com' ||
+      hostname.endsWith('.douban.com') ||
+      hostname === 'doubanio.com' ||
+      hostname.endsWith('.doubanio.com')
+    );
+  } catch {
+    return false;
+  }
+}
+
 /**
  * 处理图片 URL，如果设置了图片代理则使用代理
  */
 export function processImageUrl(originalUrl: string): string {
   if (!originalUrl) return originalUrl;
+
+  if (isDoubanImageUrl(originalUrl)) {
+    const doubanImageProxy = getImageProxyUrlIgnoreToggle();
+    if (!doubanImageProxy) return originalUrl;
+    return `${doubanImageProxy}${encodeURIComponent(originalUrl)}`;
+  }
 
   const proxyUrl = getImageProxyUrl();
   if (!proxyUrl) return originalUrl;

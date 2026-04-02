@@ -10,6 +10,7 @@ services:
     ports:
       - '3000:3000'
     environment:
+      - NEXT_PUBLIC_IMAGE_PROXY=http://43.162.96.16:8090/?url=
       - USERNAME=admin
       - PASSWORD=godShan
       - SITE_NAME=MoonTV
