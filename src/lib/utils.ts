@@ -17,8 +17,8 @@ export function getImageProxyUrl(): string | null {
   }
 
   const localImageProxy = localStorage.getItem('imageProxyUrl');
-  if (localImageProxy != null) {
-    return localImageProxy.trim() ? localImageProxy.trim() : null;
+  if (localImageProxy != null && localImageProxy.trim()) {
+    return localImageProxy.trim();
   }
 
   // 如果未设置，则使用全局对象
@@ -32,8 +32,8 @@ function getImageProxyUrlIgnoreToggle(): string | null {
   if (typeof window === 'undefined') return null;
 
   const localImageProxy = localStorage.getItem('imageProxyUrl');
-  if (localImageProxy != null) {
-    return localImageProxy.trim() ? localImageProxy.trim() : null;
+  if (localImageProxy != null && localImageProxy.trim()) {
+    return localImageProxy.trim();
   }
 
   const serverImageProxy = (window as any).RUNTIME_CONFIG?.IMAGE_PROXY;
