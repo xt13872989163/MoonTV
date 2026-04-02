@@ -22,6 +22,7 @@ services:
     depends_on:
       - moontv-redis # 确保 Redis 先启动
 
+
   # Redis 持久化服务：保存播放记录、收藏夹等数据
   moontv-redis:
     image: redis:alpine
