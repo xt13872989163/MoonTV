@@ -22,10 +22,7 @@ export function getImageProxyUrl(): string | null {
   }
 
   // 如果未设置，则使用全局对象
-  const serverImageProxy = (window as any).RUNTIME_CONFIG?.IMAGE_PROXY;
-  return serverImageProxy && serverImageProxy.trim()
-    ? serverImageProxy.trim()
-    : null;
+  return null;
 }
 
 function getImageProxyUrlIgnoreToggle(): string | null {
@@ -72,10 +69,19 @@ export function processImageUrl(originalUrl: string): string {
     return `${doubanImageProxy}${encodeURIComponent(originalUrl)}`;
   }
 
-  const proxyUrl = getImageProxyUrl();
-  if (!proxyUrl) return originalUrl;
+  if (typeof window === 'undefined') return originalUrl;
 
-  return `${proxyUrl}${encodeURIComponent(originalUrl)}`;
+  const enableImageProxy = localStorage.getItem('enableImageProxy');
+  if (enableImageProxy !== null && !JSON.parse(enableImageProxy)) {
+    return originalUrl;
+  }
+
+  const localImageProxy = localStorage.getItem('imageProxyUrl');
+  if (!localImageProxy || !localImageProxy.trim()) {
+    return originalUrl;
+  }
+
+  return `${localImageProxy.trim()}${encodeURIComponent(originalUrl)}`;
 }
 
 /**
